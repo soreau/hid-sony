@@ -38,7 +38,7 @@
 #include <linux/idr.h>
 #include <linux/input/mt.h>
 #include <linux/crc32.h>
-#include <asm/unaligned.h>
+#include <linux/unaligned.h>
 
 #include "hid-ids.h"
 
@@ -835,7 +835,7 @@ static int ds4_mapping(struct hid_device *hdev, struct hid_input *hi,
 	return 0;
 }
 
-static u8 *sony_report_fixup(struct hid_device *hdev, u8 *rdesc,
+static const u8 *sony_report_fixup(struct hid_device *hdev, u8 *rdesc,
 		unsigned int *rsize)
 {
 	struct sony_sc *sc = hid_get_drvdata(hdev);
@@ -2606,8 +2606,7 @@ static int sony_set_device_id(struct sony_sc *sc)
 	 */
 	if ((sc->quirks & SIXAXIS_CONTROLLER) ||
 	    (sc->quirks & DUALSHOCK4_CONTROLLER)) {
-		ret = ida_simple_get(&sony_device_id_allocator, 0, 0,
-					GFP_KERNEL);
+		ret = ida_alloc(&sony_device_id_allocator, GFP_KERNEL);
 		if (ret < 0) {
 			sc->device_id = -1;
 			return ret;
@@ -2623,7 +2622,7 @@ static int sony_set_device_id(struct sony_sc *sc)
 static void sony_release_device_id(struct sony_sc *sc)
 {
 	if (sc->device_id >= 0) {
-		ida_simple_remove(&sony_device_id_allocator, sc->device_id);
+		ida_free(&sony_device_id_allocator, sc->device_id);
 		sc->device_id = -1;
 	}
 }
